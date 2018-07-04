@@ -4,8 +4,14 @@ from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
+from flask_jsonpify import jsonify
+from flask_restful import Resource, Api, reqparse
+from json import dumps
+
 
 app = Flask(__name__)
+
+
 
 app.config['MYSQL_HOST']='localhost'
 app.config['MYSQL_USER']= 'root'
@@ -15,16 +21,83 @@ app.config['MYSQL_CURSORCLASS']='DictCursor'
 
 mysql = MySQL(app)
 
-@app.route('/')
-def hello():
-    return render_template('home.html')
-
-@app.route('/about')
-def about():
-    return render_template('about.html')
+api = Api(app)
 
 
-@app.route('/articles')
+
+def is_logged_in(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return f(*args, **kwargs)
+        else:
+            flash('Unauthorized, Please Login', 'danger')
+            return redirect(url_for('login'))
+    return wrap
+
+
+class ArticleList(Resource):
+    def get(self):
+        cur = mysql.connection.cursor() # 
+        cur.execute("select * from articles") # 
+        result= {'Articles': [cur.fetchall()]} # 
+        cur.close()
+        return jsonify(result)
+
+class ArticleId(Resource):
+    def get(self, article_id):
+        cur = mysql.connection.cursor() # 
+        cur.execute("select * from articles where id="+ article_id) # 
+        result= {'Articles': [cur.fetchone()]} # 
+        cur.close()
+        return jsonify(result)
+
+
+class DeleteArticle(Resource):
+    @is_logged_in
+    def delete(self, article_id):
+        cur = mysql.connection.cursor() # 
+        cur.execute("delete from articles where id=%s", [article_id]) # 
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'msg': 'The article has been deleted'})
+
+
+parser = reqparse.RequestParser()
+parser.add_argument('title')
+parser.add_argument('body')
+parser.add_argument('author')
+
+
+
+class UpdateArticle(Resource):
+    @is_logged_in
+    def put(self, article_id):
+        parsed_args = parser.parse_args()
+        cur = mysql.connection.cursor() # 
+        cur.execute("Update articles set title=%s, body=%s, author=%s where id=%s", (parsed_args['title'],parsed_args['body'], parsed_args['author'],[article_id]))  
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'msg': 'The article has been updated'})
+
+class AddArticle(Resource):
+    @is_logged_in
+    def post(self):
+        parsed_args = parser.parse_args()
+        cur = mysql.connection.cursor() # 
+        cur.execute("Insert into articles (title, body, author) values(%s,%s,%s)", (parsed_args['title'],parsed_args['body'], parsed_args['author']))  
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'msg': 'The article has been added'})        
+
+api.add_resource(ArticleList, '/articles') # Route_1
+api.add_resource(ArticleId, '/article/<article_id>') # Route_2
+api.add_resource(DeleteArticle, '/delete/<article_id>') # Route_3
+api.add_resource(UpdateArticle, '/update/<article_id>') # Route_4
+api.add_resource(AddArticle, '/add') # Route_5
+
+
+@app.route('/article_list')
 def articles():
     cur = mysql.connection.cursor()
     result = cur.execute("Select * from articles")
@@ -37,8 +110,18 @@ def articles():
         return render_template('articles.html',msg=msg)
     cur.close()
 
+@app.route('/')
+def hello():
+    return render_template('home.html')
 
-@app.route('/article/<string:id>/')
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+
+
+@app.route('/article_id/<string:id>/')
 def article(id):
     cur= mysql.connection.cursor()
     cur.execute("Select * from articles where id=%s", [id])
@@ -98,15 +181,7 @@ def login():
         return render_template('login.html')
     return render_template('login.html') 
 
-def is_logged_in(f):
-    @wraps(f)
-    def wrap(*args, **kwargs):
-        if 'logged_in' in session:
-            return f(*args, **kwargs)
-        else:
-            flash('Unauthorized, Please Login', 'danger')
-            return redirect(url_for('login'))
-    return wrap
+
 
 @app.route('/logout')
 def logout():
