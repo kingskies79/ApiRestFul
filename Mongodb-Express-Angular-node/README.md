@@ -6,6 +6,13 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 type npm install into the console from the root directory and from the directory ./MeanApp
 
+
+# DataBase settings app.js
+
+please insert the url to connect with your database server. Example for my db server into https://mlab.com/databases/mydbmongo ('mongodb://username:password@ds219130.mlab.com:19130/mydbmongo'); 
+
+Or you can install mongodb in your localhost or you can type the link to connect at your database example ('mongodb://localhost/mydbmongo')
+
 ## Run Application
 
 Run `npm start` from the directory ./MeanApp for to run the Mean Application. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.

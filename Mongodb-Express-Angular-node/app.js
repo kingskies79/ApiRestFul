@@ -6,7 +6,7 @@ const route = require('./route');
 const PORT = 3000;
 const app = new express();
 
-mongoose.connect('mongodb://kingskies79:Linux799@ds219130.mlab.com:19130/mydbmongo');
+mongoose.connect('mongodb://username:password@ds219130.mlab.com:19130/mydbmongo');
 mongoose.connection.on('connected', ()=>{
     console.log("Mongodb is running");
 })
