@@ -1,0 +1,36 @@
+<div class="container">
+  <h1>Add User</h1>
+
+  <form #frm="ngForm" class="form-group" (ngSubmit)="addUser(frm);">
+    <label for="firstName">FirstName</label><br/>
+    <input type="text" name="firstName"  class="form-control"ngModel><br/>
+    <label for="lastName">LastName</label><br/>
+    <input type="text" class="form-control" name="lastName" ngModel><br/>
+    <label for="email">Email</label><br/>
+    <input type="text" class="form-control" name="email" ngModel><br/>
+    <p>
+      <button type="submit" class="btn btn-primary" name="Submit" >Add</button>
+    </p>
+  </form>
+</div>
+
+<hr>
+<table class="table">
+  <tr>
+    <th>First Name</th>
+    <th>Last Name</th>
+    <th>Email</th>
+    <th>Edit</th>
+    <th>Delete</th>
+  </tr>
+  <tr *ngFor="let user of userList">
+    <td>{{user.firstName}}</td>
+    <td>{{user.lastName}}</td>
+    <td>{{user.email}}</td>
+    <td><a routerLink="user_edit/{{user._id}}">Edit </a></td>
+    <td><button type="button" name="Button" class="btn btn-danger" (click)="deleteUser(user._id)">X</button></td>
+  </tr> 
+</table>
+
+
+
